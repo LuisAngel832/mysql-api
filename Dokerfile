@@ -1,25 +1,14 @@
-# Utiliza la imagen base Debian Bullseye
 FROM debian:bullseye
+RUN apt-get update
 
-# Actualiza el sistema e instala dependencias básicas
-RUN apt-get update && \
-    apt-get install -y \
-    curl \
-    make \
-    g++
+RUN apt-get install -y curl make g++
 
-# Instala Node.js 20.x
-RUN curl -sL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs
+RUN curl -sL https://deb.nodesource.com/setup_20.x | bash -
+RUN apt-get install -y nodejs
 
-# Copia los archivos de la aplicación
 ADD . /
-
-# Instala las dependencias de Node.js
 RUN npm install
 
-# Expone el puerto 8080
 EXPOSE 8080
 
-# Comando para ejecutar la aplicación
-CMD ["node", "index.js"]
+CMD  ["node", "index.js"]
