@@ -9,31 +9,45 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
       - run: echo 'hello world ..'
       - run: ls -la
-      - run: touch .env
-      - run: echo 'DEV_DATABASE_URL=${{secrets.MYSQL_CONN}}'  >> .env
-      - run: cat .env
-      - run: npm install
-      - run: npm install -g sequelize-cli@6.2.0 
 
+      # Crear .env con la conexión a MySQL de Aiven (en desarrollo)
+      - run: touch .env
+      - run: echo 'DEV_DATABASE_URL=${{secrets.MYSQL_CONN}}' >> .env
+
+      # ✅ Establece NODE_ENV explícitamente para que use el bloque correcto en config.js
+      - run: echo "NODE_ENV=development" >> $GITHUB_ENV
+
+      - run: cat .env
+
+      # Instalar dependencias
+      - run: npm install
+      - run: npm install -g sequelize-cli@6.2.0
+
+      # ✅ Migración con entorno definido correctamente
       - run: sequelize db:migrate
+
+      # Build de imagen Docker
       - run: docker build -t luisangel832/mysql-restapi:${{github.sha}} .
+
       - run: docker images
       - run: docker run --name api -p 8080:8080 -d luisangel832/mysql-restapi:${{github.sha}} 
       - run: docker ps
       - run: docker exec api ls -la
 
-  #    - run: curl 0.0.0.0:8080/api
-   
+      # Docker login
       - name: docker login
         env:
           DOCKER_USER: ${{secrets.DOCKER_USER}}
           DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
-        run:  docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-        
+        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+
+      # Push de imagen a Docker Hub
       - name: docker push
-        run:  docker push ${{ secrets.DOCKER_USER}}/mysql-restapi:${{github.sha}}      
+        run: docker push ${{ secrets.DOCKER_USER }}/mysql-restapi:${{github.sha}}
