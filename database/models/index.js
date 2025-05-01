@@ -18,8 +18,15 @@ let sequelize;
 if (dbConfig.url) {
   sequelize = new Sequelize(dbConfig.url, {
     dialect: dbConfig.dialect,
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    }
   });
-} else {
+}
+ else {
   sequelize = new Sequelize(dbConfig.database, dbConfig.username, dbConfig.password, dbConfig);
 }
 
